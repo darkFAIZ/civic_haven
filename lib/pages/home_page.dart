@@ -1,15 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import '../pages/emergency_detail_page.dart';
+class _QuickAction {
+  const _QuickAction({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+}
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final quickActions = [
+      _QuickAction(title: 'Safe Route', icon: Icons.route_outlined, color: const Color(0xFF7EC7F7), onTap: () {
+        Navigator.of(context).pushNamed('/route');
+      }),
+      _QuickAction(title: 'AI Guide', icon: Icons.smart_toy_outlined, color: const Color(0xFF6EE7B7), onTap: () {
+        Navigator.of(context).pushNamed('/ai');
+      }),
+      _QuickAction(title: 'Report', icon: Icons.warning_amber_rounded, color: const Color(0xFFFBBF24), onTap: () {
+        Navigator.of(context).pushNamed('/report');
+      }),
+      _QuickAction(title: 'Scan Doc', icon: Icons.verified_user_outlined, color: const Color(0xFFA78BFA), onTap: () {
+        Navigator.of(context).pushNamed('/scan');
+      }),
+    ];
+
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        padding: const EdgeInsets.all(20),
         child: ListView(
           children: [
             Row(
@@ -19,84 +47,92 @@ class HomePage extends StatelessWidget {
                   'CivicHaven',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2B3340),
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF1F2B36),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.notifications_none, color: Colors.white),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF7EC7F7), Color(0xFF5BA9D9)],
+                  colors: [Color(0xFF7EC7F7), Color(0xFF4DA3C8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(26),
+                borderRadius: BorderRadius.circular(28),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Emergency',
+                    'Understand → Verify → Protect → Act → Adapt',
                     style: TextStyle(
-                      color: Color(0xFF11263B),
-                      fontSize: 18,
+                      fontSize: 12,
+                      color: Color(0xFF0F1720),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Emergency',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F1720),
+                    ),
+                  ),
                   const Text(
                     'Need Help?',
                     style: TextStyle(
-                      color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   const Text(
-                    'Connect with local responders and community support in seconds.',
+                    'Call emergency support or ask for a safer route home.',
                     style: TextStyle(
-                      color: Color(0xFFDBF0FF),
                       fontSize: 14,
+                      color: Color(0xFFDBF0FF),
                     ),
                   ),
                   const SizedBox(height: 18),
                   Row(
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const EmergencyDetailsPage(),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final uri = Uri(scheme: 'tel', path: '112');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Phone dialer unavailable')),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F2D41),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                          );
-                        },
-                        child: const _ActionPill(
-                          label: 'Call',
-                          color: Color(0xFF0E3D5C),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pushNamed('/report');
-                        },
-                        child: const _ActionPill(
-                          label: 'Report',
-                          color: Color(0xFF0B1F36),
+                          ),
+                          icon: const Icon(Icons.call),
+                          label: const Text('Call police'),
                         ),
                       ),
                     ],
@@ -104,142 +140,84 @@ class HomePage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 22),
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 14),
-            GridView.count(
-              crossAxisCount: 3,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.9,
-              children: const [
-                ServiceTile(label: 'Health', icon: Icons.medical_services_outlined),
-                ServiceTile(label: 'Safety', icon: Icons.shield_outlined),
-                ServiceTile(label: 'Flood', icon: Icons.water_drop_outlined),
-                ServiceTile(label: 'Fire', icon: Icons.local_fire_department_outlined),
-                ServiceTile(label: 'Power', icon: Icons.electrical_services_outlined),
-                ServiceTile(label: 'Traffic', icon: Icons.traffic_outlined),
-              ],
-            ),
             const SizedBox(height: 24),
             const Text(
-              'Live Community Reports',
+              'Quick actions',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const EmergencyDetailsPage(),
-                  ),
-                );
-              },
-              child: const _ReportCard(
-                title: 'Water outage near Riverside',
-                time: '12 mins ago',
-                tag: 'Infrastructure',
-                tint: Color(0xFFBFECFF),
-              ),
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const EmergencyDetailsPage(),
-                  ),
-                );
-              },
-              child: const _ReportCard(
-                title: 'Volunteer kit drop scheduled',
-                time: '31 mins ago',
-                tag: 'Relief',
-                tint: Color(0xFFD9F0C6),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionPill extends StatelessWidget {
-  const _ActionPill({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class ServiceTile extends StatelessWidget {
-  const ServiceTile({super.key, required this.label, required this.icon});
-
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$label service selected')),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFBFEAFF),
-          borderRadius: BorderRadius.circular(22),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: const Color(0xFF2E78A6),
-              child: Icon(icon, color: Colors.white),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFF102A3C),
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
             ),
+            const SizedBox(height: 12),
+            GridView.builder(
+              itemCount: quickActions.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                childAspectRatio: 1.15,
+              ),
+              itemBuilder: (context, index) {
+                final action = quickActions[index];
+                return Material(
+                  color: const Color(0xFF1F2B36),
+                  borderRadius: BorderRadius.circular(22),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(22),
+                    onTap: action.onTap,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: action.color.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(action.icon, color: Colors.white),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            action.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 28),
+            const Text(
+              'Latest alerts',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const _AlertCard(
+              title: 'Water outage near Riverside',
+              badge: 'Infrastructure',
+              time: '12 min ago',
+            ),
+            const SizedBox(height: 12),
+            const _AlertCard(
+              title: 'Volunteer aid hub opened',
+              badge: 'Support',
+              time: '31 min ago',
+            ),
           ],
         ),
       ),
@@ -247,37 +225,35 @@ class ServiceTile extends StatelessWidget {
   }
 }
 
-class _ReportCard extends StatelessWidget {
-  const _ReportCard({
+class _AlertCard extends StatelessWidget {
+  const _AlertCard({
     required this.title,
+    required this.badge,
     required this.time,
-    required this.tag,
-    required this.tint,
   });
 
   final String title;
+  final String badge;
   final String time;
-  final String tag;
-  final Color tint;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2C3742),
+        color: const Color(0xFF1F2B36),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
           Container(
-            width: 54,
-            height: 54,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              color: tint,
+              color: const Color(0xFF7EC7F7).withOpacity(0.18),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.info_outline, color: Color(0xFF102A3C)),
+            child: const Icon(Icons.info_outline, color: Color(0xFF7EC7F7)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -288,14 +264,14 @@ class _ReportCard extends StatelessWidget {
                   title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   time,
                   style: const TextStyle(
-                    color: Color(0xFF9CB1C3),
+                    color: Color(0xFF9FB7C7),
                     fontSize: 12,
                   ),
                 ),
@@ -303,17 +279,17 @@ class _ReportCard extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFB8E3F8),
+              color: const Color(0xFFC9F0FF),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              tag,
+              badge,
               style: const TextStyle(
-                color: Color(0xFF102A3C),
+                color: Color(0xFF153B52),
                 fontSize: 11,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
