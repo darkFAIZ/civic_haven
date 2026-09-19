@@ -4,6 +4,12 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>CivicHaven uses the camera to scan documents and attach evidence.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>CivicHaven uses your location to build a safer route.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CivicHaven uses your files and photos for document verification and reports.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

@@ -1,4 +1,10 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../services/data_service.dart';
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -16,6 +22,11 @@ class _ReportPageState extends State<ReportPage> {
   );
   String selectedCategory = 'Scam / exploitation';
   double severity = 8;
+  final imagePicker = ImagePicker();
+  Uint8List? evidenceBytes;
+  String? evidenceName;
+  String? evidenceUrl;
+  bool busy = false;
   final List<Map<String, dynamic>> reports = [
     {'title': 'Fake rental agreement', 'status': 'Verified', 'type': 'Scam / exploitation'},
   ];
@@ -26,6 +37,70 @@ class _ReportPageState extends State<ReportPage> {
     _locationController.dispose();
     _detailsController.dispose();
     super.dispose();
+  }
+
+  Future<void> pickEvidence() async {
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(leading: const Icon(Icons.camera_alt), title: const Text('Take a photo'), onTap: () => Navigator.pop(context, 'camera')),
+            ListTile(leading: const Icon(Icons.upload_file), title: const Text('Choose from files'), onTap: () => Navigator.pop(context, 'file')),
+          ],
+        ),
+      ),
+    );
+    if (source == 'camera') {
+      final image = await imagePicker.pickImage(source: ImageSource.camera, imageQuality: 85);
+      if (image != null) {
+        evidenceBytes = await image.readAsBytes();
+        evidenceName = image.name;
+      }
+    } else if (source == 'file') {
+      final result = await FilePicker.platform.pickFiles(withData: true);
+      if (result != null && result.files.single.bytes != null) {
+        evidenceBytes = result.files.single.bytes;
+        evidenceName = result.files.single.name;
+      }
+    }
+    if (mounted && evidenceName != null) setState(() {});
+  }
+
+  Future<void> submitReport() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => busy = true);
+    try {
+      if (evidenceBytes != null && evidenceName != null) {
+        evidenceUrl = await DataService.instance.uploadBytes(
+          bytes: evidenceBytes!,
+          fileName: evidenceName!,
+          folder: 'report-evidence',
+        );
+      }
+      await DataService.instance.addHistory(
+        type: 'report',
+        title: _titleController.text,
+        details: {
+          'category': selectedCategory,
+          'location': _locationController.text,
+          'details': _detailsController.text,
+          'severity': severity.round(),
+          'evidenceName': evidenceName,
+          'evidenceUrl': evidenceUrl,
+        },
+      );
+      reports.insert(0, {'title': _titleController.text, 'status': 'Submitted', 'type': selectedCategory});
+      if (mounted) {
+        setState(() => busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report saved to your history')));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not save report. Check Firebase and try again.')));
+      }
+    }
   }
 
   @override
@@ -102,13 +177,9 @@ class _ReportPageState extends State<ReportPage> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Evidence attached')),
-                          );
-                        },
+                        onPressed: busy ? null : pickEvidence,
                         icon: const Icon(Icons.attach_file),
-                        label: const Text('Attach evidence'),
+                        label: Text(evidenceName == null ? 'Attach evidence' : 'Attached: $evidenceName'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
                           side: const BorderSide(color: Color(0xFF7EC7F7)),
@@ -120,19 +191,7 @@ class _ReportPageState extends State<ReportPage> {
                 ),
                 const SizedBox(height: 22),
                 ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      reports.insert(0, {
-                        'title': _titleController.text,
-                        'status': 'Submitted',
-                        'type': selectedCategory,
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Report submitted successfully')),
-                      );
-                      setState(() {});
-                    }
-                  },
+                  onPressed: busy ? null : submitReport,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF7EC7F7),
                     foregroundColor: const Color(0xFF0F1720),

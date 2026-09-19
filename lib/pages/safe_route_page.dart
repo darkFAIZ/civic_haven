@@ -1,7 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class SafeRoutePage extends StatelessWidget {
+import '../services/data_service.dart';
+
+class SafeRoutePage extends StatefulWidget {
   const SafeRoutePage({super.key});
+
+  @override
+  State<SafeRoutePage> createState() => _SafeRoutePageState();
+}
+
+class _SafeRoutePageState extends State<SafeRoutePage> {
+  Position? position;
+  bool busy = false;
+  String message = 'Use your current location to plan a safer route.';
+
+  Future<void> useMyLocation() async {
+    setState(() => busy = true);
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw StateError('Turn on Location Services first.');
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        throw StateError('Location permission was not granted.');
+      }
+      final current = await Geolocator.getCurrentPosition();
+      final mapsUri = Uri.parse('https://www.google.com/maps/dir/?api=1&origin=${current.latitude},${current.longitude}&destination=Main%20Station');
+      await DataService.instance.addHistory(
+        type: 'safe_route',
+        title: 'Safe route planned',
+        details: {'latitude': current.latitude, 'longitude': current.longitude, 'destination': 'Main Station'},
+      );
+      setState(() {
+        position = current;
+        message = 'Route saved. Opening directions from your current location.';
+      });
+      await launchUrl(mapsUri, mode: LaunchMode.externalApplication);
+    } catch (error) {
+      setState(() => message = error.toString().replaceFirst('Bad state: ', ''));
+    } finally {
+      setState(() => busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +86,8 @@ class SafeRoutePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Avoid the river pathway after 10 PM. This route has better lighting and police visibility.',
+                  Text(
+                    message,
                     style: TextStyle(
                       color: Color(0xFF9FB7C7),
                       height: 1.5,
@@ -115,6 +160,9 @@ class SafeRoutePage extends StatelessWidget {
                     title: 'Call police',
                     icon: Icons.call,
                     color: const Color(0xFF7EC7F7),
+                      onTap: () async {
+                        await launchUrl(Uri(scheme: 'tel', path: '112'));
+                      },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -123,6 +171,7 @@ class SafeRoutePage extends StatelessWidget {
                     title: 'Share location',
                     icon: Icons.location_on,
                     color: const Color(0xFF6EE7B7),
+                    onTap: busy ? null : useMyLocation,
                   ),
                 ),
               ],
@@ -139,15 +188,20 @@ class _ActionCard extends StatelessWidget {
     required this.title,
     required this.icon,
     required this.color,
+    required this.onTap,
   });
 
   final String title;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: const Color(0xFF1F2B36),
@@ -174,6 +228,7 @@ class _ActionCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

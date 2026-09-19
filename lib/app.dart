@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'pages/ai_assistant_page.dart';
+import 'pages/auth_page.dart';
 import 'pages/home_page.dart';
+import 'pages/profile_page.dart';
 import 'pages/report_page.dart';
 import 'pages/safe_route_page.dart';
 import 'pages/trust_scan_page.dart';
@@ -24,12 +28,35 @@ class CivicHavenApp extends StatelessWidget {
         ),
         fontFamily: 'Roboto',
       ),
-      home: const BottomNavShell(),
+      home: const AuthGate(),
       routes: {
         '/report': (_) => const ReportPage(),
         '/route': (_) => const SafeRoutePage(),
         '/ai': (_) => const AIGuidePage(),
         '/scan': (_) => const TrustScanPage(),
+      },
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (Firebase.apps.isEmpty) {
+      return const AuthPage();
+    }
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Color(0xFF0F1720),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return snapshot.data == null ? const AuthPage() : const BottomNavShell();
       },
     );
   }
@@ -51,6 +78,7 @@ class _BottomNavShellState extends State<BottomNavShell> {
     AIGuidePage(),
     ReportPage(),
     TrustScanPage(),
+    ProfilePage(),
   ];
 
   @override
@@ -73,6 +101,7 @@ class _BottomNavShellState extends State<BottomNavShell> {
           NavigationDestination(icon: Icon(Icons.smart_toy_outlined), selectedIcon: Icon(Icons.smart_toy), label: 'AI Guide'),
           NavigationDestination(icon: Icon(Icons.report_problem_outlined), selectedIcon: Icon(Icons.report_problem), label: 'Report'),
           NavigationDestination(icon: Icon(Icons.verified_user_outlined), selectedIcon: Icon(Icons.verified_user), label: 'Scan'),
+          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

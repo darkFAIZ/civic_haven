@@ -10,11 +10,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:civic_haven/app.dart';
 
 void main() {
-  testWidgets('CivicHaven shows emergency dashboard content', (tester) async {
+  testWidgets('CivicHaven requires authentication before showing account data', (tester) async {
     await tester.pumpWidget(const CivicHavenApp());
 
     expect(find.text('CivicHaven'), findsOneWidget);
-    expect(find.text('Emergency'), findsAtLeastNWidgets(1));
-    expect(find.text('Need Help?'), findsOneWidget);
+    expect(find.text('Sign in to your account'), findsOneWidget);
+    expect(find.text('Send OTP code'), findsOneWidget);
   });
 }
