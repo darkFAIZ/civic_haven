@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -53,7 +54,7 @@ class ProfilePage extends StatelessWidget {
               const Text('My history', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
               Expanded(
-                child: StreamBuilder(
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: DataService.instance.watchHistory(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -68,9 +69,9 @@ class ProfilePage extends StatelessWidget {
                     }
                     return ListView.separated(
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
-                        final data = items[index].data() as Map<String, dynamic>;
+                        final data = items[index].data();
                         final type = data['type'] as String? ?? 'activity';
                         return Container(
                           padding: const EdgeInsets.all(15),
