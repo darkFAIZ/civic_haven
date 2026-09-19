@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../firebase_options.dart';
 import '../services/auth_service.dart';
 
 class AuthPage extends StatefulWidget {
@@ -30,6 +31,10 @@ class _AuthPageState extends State<AuthPage> {
     final phone = phoneController.text.trim();
     if (phone.isEmpty) {
       setState(() => errorMessage = 'Enter a phone number with country code.');
+      return;
+    }
+    if (DefaultFirebaseOptions.currentPlatform.apiKey == 'demo-api-key') {
+      setState(() => errorMessage = 'Firebase is using placeholder credentials. Configure a Firebase project before sending OTP.');
       return;
     }
     setState(() {

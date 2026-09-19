@@ -58,10 +58,10 @@ class _ReportPageState extends State<ReportPage> {
         evidenceName = image.name;
       }
     } else if (source == 'file') {
-      final result = await FilePicker.platform.pickFiles(withData: true);
-      if (result != null && result.files.single.bytes != null) {
-        evidenceBytes = result.files.single.bytes;
-        evidenceName = result.files.single.name;
+      final file = await FilePicker.pickFile();
+      if (file != null) {
+        evidenceBytes = await file.readAsBytes();
+        evidenceName = file.name;
       }
     }
     if (mounted && evidenceName != null) setState(() {});

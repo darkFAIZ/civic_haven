@@ -26,10 +26,9 @@ class _TrustScanPageState extends State<TrustScanPage> {
   }
 
   Future<void> uploadDocument() async {
-    final result = await FilePicker.platform.pickFiles(withData: true);
-    if (result == null || result.files.single.bytes == null) return;
-    final file = result.files.single;
-    await saveDocument(file.bytes!, file.name, 'document upload');
+    final file = await FilePicker.pickFile();
+    if (file == null) return;
+    await saveDocument(await file.readAsBytes(), file.name, 'document upload');
   }
 
   Future<void> saveDocument(Uint8List bytes, String name, String source) async {
