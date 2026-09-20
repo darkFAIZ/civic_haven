@@ -43,7 +43,7 @@ class ProfilePage extends StatelessWidget {
                         children: [
                           const Text('CivicHaven member', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
-                          Text(user?.phoneNumber ?? 'Verified phone account', style: const TextStyle(color: Color(0xFFB1C7D8))),
+                          Text(user?.email ?? 'Verified Gmail account', style: const TextStyle(color: Color(0xFFB1C7D8))),
                         ],
                       ),
                     ),

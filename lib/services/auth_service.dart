@@ -8,9 +8,9 @@ class AuthService {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Future<void> saveProfile({required User user, required String phoneNumber}) {
+  Future<void> saveProfile({required User user, required String email}) {
     return firestore.collection('users').doc(user.uid).set({
-      'phoneNumber': phoneNumber,
+      'email': email,
       'createdAt': FieldValue.serverTimestamp(),
       'lastLoginAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));

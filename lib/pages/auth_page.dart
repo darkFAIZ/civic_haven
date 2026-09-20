@@ -12,29 +12,32 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final phoneController = TextEditingController();
-  final codeController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   bool createAccount = false;
-  bool codeSent = false;
   bool busy = false;
-  String? verificationId;
   String? errorMessage;
 
   @override
   void dispose() {
-    phoneController.dispose();
-    codeController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> sendCode() async {
-    final phone = phoneController.text.trim();
-    if (phone.isEmpty) {
-      setState(() => errorMessage = 'Enter a phone number with country code.');
+  Future<void> submitAuth() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => errorMessage = 'Enter a valid Gmail address.');
+      return;
+    }
+    if (password.length < 6) {
+      setState(() => errorMessage = 'Password must be at least 6 characters.');
       return;
     }
     if (DefaultFirebaseOptions.currentPlatform.apiKey == 'demo-api-key') {
-      setState(() => errorMessage = 'Firebase is using placeholder credentials. Configure a Firebase project before sending OTP.');
+      setState(() => errorMessage = 'Firebase is using placeholder credentials. Configure a Firebase project first.');
       return;
     }
     setState(() {
@@ -42,85 +45,52 @@ class _AuthPageState extends State<AuthPage> {
       errorMessage = null;
     });
     try {
-      await AuthService.instance.auth.verifyPhoneNumber(
-        phoneNumber: phone,
-        verificationCompleted: (credential) async {
-          await _finishSignIn(credential, phone);
-        },
-        verificationFailed: (error) {
-          if (mounted) {
-            setState(() {
-              busy = false;
-              errorMessage = error.message ?? 'Could not send the verification code.';
-            });
-          }
-        },
-        codeSent: (id, _) {
-          if (mounted) {
-            setState(() {
-              verificationId = id;
-              codeSent = true;
-              busy = false;
-            });
-          }
-        },
-        codeAutoRetrievalTimeout: (id) => verificationId = id,
-      );
+      final auth = AuthService.instance.auth;
+      final result = createAccount
+          ? await auth.createUserWithEmailAndPassword(email: email, password: password)
+          : await auth.signInWithEmailAndPassword(email: email, password: password);
+      final user = result.user;
+      if (user == null) throw StateError('Firebase did not return a user.');
+
+      if (createAccount) {
+        await user.sendEmailVerification();
+        await AuthService.instance.saveProfile(user: user, email: email);
+      } else {
+        await AuthService.instance.updateLastLogin(user.uid);
+      }
+      if (mounted) setState(() => busy = false);
+    } on FirebaseAuthException catch (error) {
+      if (mounted) {
+        setState(() {
+          busy = false;
+          errorMessage = _authError(error.code);
+        });
+      }
     } catch (error) {
       if (mounted) {
         setState(() {
           busy = false;
-          errorMessage = 'Firebase is not configured for this device yet.';
+          errorMessage = error.toString();
         });
       }
     }
   }
 
-  Future<void> confirmCode() async {
-    final id = verificationId;
-    if (id == null || codeController.text.trim().length < 6) {
-      setState(() => errorMessage = 'Enter the 6-digit code from Firebase.');
-      return;
-    }
-    setState(() {
-      busy = true;
-      errorMessage = null;
-    });
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: id,
-        smsCode: codeController.text.trim(),
-      );
-      await _finishSignIn(credential, phoneController.text.trim());
-    } on FirebaseAuthException catch (error) {
-      setState(() {
-        busy = false;
-        errorMessage = error.message ?? 'That verification code is not valid.';
-      });
-    }
-  }
-
-  Future<void> _finishSignIn(AuthCredential credential, String phone) async {
-    final result = await AuthService.instance.auth.signInWithCredential(credential);
-    final user = result.user;
-    if (user == null) throw StateError('Firebase did not return a user.');
-
-    final exists = await AuthService.instance.profileExists(user.uid);
-    if (createAccount && exists) {
-      await AuthService.instance.auth.signOut();
-      throw StateError('An account already exists. Choose Log in instead.');
-    }
-    if (!createAccount && !exists) {
-      await AuthService.instance.auth.signOut();
-      throw StateError('No CivicHaven account exists for this number. Create an account first.');
-    }
-    if (createAccount) {
-      await AuthService.instance.saveProfile(user: user, phoneNumber: phone);
-    } else {
-      await AuthService.instance.updateLastLogin(user.uid);
-    }
-    if (mounted) {
-      setState(() => busy = false);
+  String _authError(String code) {
+    switch (code) {
+      case 'email-already-in-use':
+        return 'That Gmail already has an account. Choose Log in.';
+      case 'invalid-credential':
+      case 'wrong-password':
+        return 'Gmail or password is incorrect.';
+      case 'user-not-found':
+        return 'No account found. Choose Create an account first.';
+      case 'weak-password':
+        return 'Choose a stronger password with at least 6 characters.';
+      case 'invalid-email':
+        return 'Enter a valid Gmail address.';
+      default:
+        return 'Could not authenticate with Firebase ($code).';
     }
   }
 
@@ -150,32 +120,29 @@ class _AuthPageState extends State<AuthPage> {
                   ),
                   const SizedBox(height: 28),
                   TextField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
-                    decoration: _decoration('Phone number', Icons.phone_outlined),
+                    decoration: _decoration('Gmail address', Icons.email_outlined),
                   ),
-                  if (codeSent) ...[
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: codeController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 6,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _decoration('Firebase OTP code', Icons.lock_outline),
-                    ),
-                  ],
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _decoration('Password', Icons.lock_outline),
+                  ),
                   const SizedBox(height: 18),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: busy ? null : (codeSent ? confirmCode : sendCode),
+                      onPressed: busy ? null : submitAuth,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF7EC7F7),
                         foregroundColor: const Color(0xFF0F1720),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text(codeSent ? 'Verify and continue' : 'Send OTP code'),
+                      child: Text(createAccount ? 'Create account' : 'Log in'),
                     ),
                   ),
                   if (errorMessage != null) ...[
@@ -189,8 +156,6 @@ class _AuthPageState extends State<AuthPage> {
                           ? null
                           : () => setState(() {
                                 createAccount = !createAccount;
-                                codeSent = false;
-                                verificationId = null;
                                 errorMessage = null;
                               }),
                       child: Text(
@@ -201,7 +166,7 @@ class _AuthPageState extends State<AuthPage> {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'A Firebase SMS code is required. Existing accounts can log in; new accounts must be created first.',
+                    'Use a Gmail address and password. New accounts receive a Firebase verification email.',
                     style: TextStyle(color: Color(0xFF708999), height: 1.4),
                   ),
                 ],
