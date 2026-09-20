@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "740737504177",
+    "project_id": "civichaven-9fb00",
+    "storage_bucket": "civichaven-9fb00.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740737504177:android:a329130d38da8af787a390",
+        "android_client_info": {
+          "package_name": "com.example.civic_haven"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpoeBE0qzcqfR-iTgBP20NBwfxX7XA0rg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
