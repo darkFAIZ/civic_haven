@@ -26,4 +26,8 @@ class AuthService {
       'lastLoginAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  Future<void> sendPasswordReset(String email) {
+    return auth.sendPasswordResetEmail(email: email);
+  }
 }
