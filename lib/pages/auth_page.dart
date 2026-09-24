@@ -17,6 +17,7 @@ class _AuthPageState extends State<AuthPage> {
   bool createAccount = false;
   bool busy = false;
   String? errorMessage;
+  String? successMessage;
 
   @override
   void dispose() {
@@ -29,20 +30,30 @@ class _AuthPageState extends State<AuthPage> {
     final email = emailController.text.trim();
     final password = passwordController.text;
     if (email.isEmpty || !email.contains('@')) {
-      setState(() => errorMessage = 'Enter a valid Gmail address.');
+      setState(() {
+        errorMessage = 'Enter a valid Gmail address.';
+        successMessage = null;
+      });
       return;
     }
     if (password.length < 6) {
-      setState(() => errorMessage = 'Password must be at least 6 characters.');
+      setState(() {
+        errorMessage = 'Password must be at least 6 characters.';
+        successMessage = null;
+      });
       return;
     }
     if (DefaultFirebaseOptions.currentPlatform.apiKey == 'demo-api-key') {
-      setState(() => errorMessage = 'Firebase is using placeholder credentials. Configure a Firebase project first.');
+      setState(() {
+        errorMessage = 'Firebase is using placeholder credentials. Configure a Firebase project first.';
+        successMessage = null;
+      });
       return;
     }
     setState(() {
       busy = true;
       errorMessage = null;
+      successMessage = null;
     });
     try {
       final auth = AuthService.instance.auth;
@@ -55,10 +66,56 @@ class _AuthPageState extends State<AuthPage> {
       if (createAccount) {
         await user.sendEmailVerification();
         await AuthService.instance.saveProfile(user: user, email: email);
+        if (mounted) {
+          setState(() {
+            successMessage = 'Verification email sent to $email. Please check your inbox!';
+          });
+        }
       } else {
         await AuthService.instance.updateLastLogin(user.uid);
       }
       if (mounted) setState(() => busy = false);
+    } on FirebaseAuthException catch (error) {
+      if (mounted) {
+        setState(() {
+          busy = false;
+          errorMessage = _authError(error.code);
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          busy = false;
+          errorMessage = error.toString();
+        });
+      }
+    }
+  }
+
+  Future<void> handleForgotPassword() async {
+    final email = emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() {
+        errorMessage = 'Enter your Gmail address above to reset password.';
+        successMessage = null;
+      });
+      return;
+    }
+
+    setState(() {
+      busy = true;
+      errorMessage = null;
+      successMessage = null;
+    });
+
+    try {
+      await AuthService.instance.sendPasswordReset(email);
+      if (mounted) {
+        setState(() {
+          busy = false;
+          successMessage = 'Password reset link sent to $email. Check your inbox!';
+        });
+      }
     } on FirebaseAuthException catch (error) {
       if (mounted) {
         setState(() {
@@ -132,7 +189,19 @@ class _AuthPageState extends State<AuthPage> {
                     style: const TextStyle(color: Colors.white),
                     decoration: _decoration('Password', Icons.lock_outline),
                   ),
-                  const SizedBox(height: 18),
+                  if (!createAccount) ...[
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: busy ? null : handleForgotPassword,
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(color: Color(0xFF7EC7F7), fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -149,6 +218,10 @@ class _AuthPageState extends State<AuthPage> {
                     const SizedBox(height: 14),
                     Text(errorMessage!, style: const TextStyle(color: Color(0xFFFF9B9B))),
                   ],
+                  if (successMessage != null) ...[
+                    const SizedBox(height: 14),
+                    Text(successMessage!, style: const TextStyle(color: Color(0xFFB8F3C8))),
+                  ],
                   const SizedBox(height: 20),
                   Center(
                     child: TextButton(
@@ -157,17 +230,13 @@ class _AuthPageState extends State<AuthPage> {
                           : () => setState(() {
                                 createAccount = !createAccount;
                                 errorMessage = null;
+                                successMessage = null;
                               }),
                       child: Text(
                         createAccount ? 'Already have an account? Log in' : 'New here? Create an account',
                         style: const TextStyle(color: Color(0xFF7EC7F7)),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Use a Gmail address and password. New accounts receive a Firebase verification email.',
-                    style: TextStyle(color: Color(0xFF708999), height: 1.4),
                   ),
                 ],
               ),
