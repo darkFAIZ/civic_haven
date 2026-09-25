@@ -10,7 +10,10 @@ class AIGuidePage extends StatefulWidget {
 }
 
 class _ChatMessage {
-  const _ChatMessage({required this.text, required this.isUser});
+  const _ChatMessage({
+    required this.text,
+    required this.isUser,
+  });
 
   final String text;
   final bool isUser;
@@ -135,14 +138,10 @@ class _AIGuidePageState extends State<AIGuidePage> {
             ),
             const SizedBox(height: 12),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                   child: TextField(
                     controller: messageController,
-                    enabled: !sending,
-                    minLines: 1,
-                    maxLines: 4,
                     onSubmitted: (_) => sendMessage(),
                     decoration: InputDecoration(
                       hintText: 'Ask about safety...',
@@ -160,12 +159,11 @@ class _AIGuidePageState extends State<AIGuidePage> {
                 const SizedBox(width: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: sending ? const Color(0xFF52616B) : const Color(0xFF7EC7F7),
+                    color: const Color(0xFF7EC7F7),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: IconButton(
                     onPressed: sending ? null : sendMessage,
-                    tooltip: 'Send message',
                     icon: const Icon(Icons.send, color: Color(0xFF0F1720)),
                   ),
                 ),
