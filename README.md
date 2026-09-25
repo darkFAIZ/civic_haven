@@ -1,12 +1,36 @@
 # CivicHaven
 
-CivicHaven is a Flutter mobile app for personal and community safety. It lets a user create an account, save safety activity, submit incident reports with evidence, find a safer route, scan documents or images, open emergency resources, and keep a personal history.
+CivicHaven is a Flutter mobile app for personal and community safety. It helps young urban migrants understand unfamiliar places, avoid scams, report unsafe situations, find safer routes, and keep trusted safety information in one place.
 
 This repository contains the Flutter app in `civic_haven/`. Firebase is required for account creation, sign-in, user profiles, history, and uploaded evidence.
 
 The AI Guide uses Firebase AI Logic with Gemini. No Gemini API key is stored in the Flutter app.
 
-## Main features
+## 1. Main problem
+
+Young urban migrants often move to a new city for study, work, or family opportunities without already knowing the local neighborhoods, services, risks, or reporting processes. This creates several connected problems:
+
+- It is difficult to judge whether a rental listing, broker, document, or online request is trustworthy.
+- People may not know which route is safer or which emergency resource to contact.
+- Incident reporting can feel confusing, fragmented, or difficult to do quickly.
+- Important reports, scans, routes, and safety guidance are spread across different apps or conversations.
+- Language, local context, and unfamiliar systems can make a person more vulnerable to fraud or unsafe decisions.
+
+The target market is young urban migrants, including students, early-career workers, and newly arrived residents who need practical, accessible safety support while building independence in a new city.
+
+## 2. Solution
+
+CivicHaven combines several safety workflows in one authenticated mobile app:
+
+- **Understand:** Ask the Gemini-powered AI Guide for calm, practical safety guidance.
+- **Verify:** Use Trust Scan to inspect documents or images and identify suspicious signals.
+- **Protect:** Find a safer route and open trusted emergency resources.
+- **Act:** Submit an incident report with category, location, details, severity, and evidence.
+- **Adapt:** Review saved activity in a personal history so previous safety actions remain available.
+
+The app uses Firebase Email/Password Authentication. It does not use OTP or SMS authentication. New users can receive an email verification link, existing users can log in with their email and password, and users can request a Firebase password-reset email. After successful account creation or login, Firebase auth state sends the user to the home dashboard.
+
+## 3. Main features
 
 - Email and password account creation and sign-in.
 - Email verification for newly created accounts.
@@ -30,6 +54,7 @@ The AI Guide uses Firebase AI Logic with Gemini. No Gemini API key is stored in 
 | **Firebase AI Logic** | Sends safety questions to Gemini from the authenticated AI Guide. |
 | **Cloud Firestore** | Stores user profiles and each user's saved history and report details. |
 | **Firebase Storage** | Stores report and scan evidence uploaded from the camera or files. |
+| **Firebase App Check** | Planned protection for AI and Firebase requests before production enforcement. |
 | **FlutterFire CLI** | Connects the Flutter project to a Firebase project and generates `lib/firebase_options.dart`. |
 | **image_picker** | Takes photos with the device camera. |
 | **file_picker** | Selects evidence and documents from the device. |
@@ -54,7 +79,54 @@ ios/                        iOS project and privacy permission descriptions
 test/                       Flutter tests
 ```
 
-## Requirements
+## 4. Application architecture
+
+CivicHaven uses a Flutter client with Firebase-managed authentication, data, storage, and AI access.
+
+```mermaid
+flowchart TD
+	User[Young urban migrant] --> Flutter[Flutter mobile app]
+	Flutter --> Auth[Firebase Authentication\nEmail and password]
+	Auth --> Gate[AuthGate]
+	Gate --> Shell[Bottom navigation shell]
+	Shell --> Home[Home dashboard]
+	Shell --> Route[Safe Route]
+	Shell --> AI[AI Guide]
+	Shell --> Report[Incident Report]
+	Shell --> Scan[Trust Scan]
+	Shell --> Profile[Profile and history]
+	Report --> Storage[Firebase Storage\nEvidence files]
+	Scan --> Storage
+	Report --> Firestore[Cloud Firestore\nUser history and reports]
+	Profile --> Firestore
+	AI --> Logic[Firebase AI Logic]
+	Logic --> Gemini[Gemini 2.5 Flash]
+	Route --> Maps[External maps app]
+	Home --> Emergency[Emergency resources]
+```
+
+### Main runtime flow
+
+1. `main.dart` initializes Firebase with the generated platform options.
+2. `AuthGate` listens to Firebase `authStateChanges()`.
+3. Signed-out users see the email/password auth screen.
+4. Signed-in users enter `BottomNavShell`, which contains the app's main features.
+5. `AuthService` writes user profiles and last-login timestamps to Firestore.
+6. `AIService` creates one Gemini chat session through Firebase AI Logic and keeps the conversation history for the current app session.
+7. Feature services write user-scoped history and evidence to Firebase using the authenticated user's UID.
+
+### Firebase data model
+
+```text
+users/{userId}
+users/{userId}/history/{historyId}
+users/{userId}/report-evidence/{timestamp}_{fileName}
+users/{userId}/scan-evidence/{timestamp}_{fileName}
+```
+
+The checked-in Firebase configuration currently targets Android package `com.example.civic_haven`. Web, Windows, and iOS options must be generated separately with FlutterFire before using those platforms.
+
+## 5. Requirements
 
 Install the following before running the app:
 
@@ -79,7 +151,7 @@ If `flutter` is not in your PATH, use the Flutter executable in the repository i
 ..\flutter\bin\flutter.bat pub get
 ```
 
-## Configure Firebase
+## 6. Configure Firebase
 
 The checked-in Firebase configuration may contain placeholder or project-specific values. Configure your own Firebase project before trying to create an account or upload data.
 
@@ -169,25 +241,27 @@ cd ..
 
 Add the SHA-1 and SHA-256 values in **Firebase Console > Project settings > Your apps > Android app**.
 
-## Run the app during development
+## 7. Run the app during development
 
-1. Connect an Android phone with Developer options and USB debugging enabled, or start an Android emulator.
-2. From the project folder, check that Flutter can see the device:
+1. Confirm Firebase is configured for Android and that Email/Password Authentication is enabled.
+2. Connect an Android phone with Developer options and USB debugging enabled, or start an Android emulator.
+3. From the project folder, check that Flutter can see the device:
 
 ```powershell
 flutter devices
 ```
 
-3. Install dependencies and run the app:
+4. Install dependencies and run the app on the Android device:
 
 ```powershell
 flutter pub get
-flutter run
+flutter run -d <android-device-id>
 ```
 
-4. Create an account with an email address and a password of at least six characters.
-5. Open the verification email and verify the account.
-6. Sign in again and test location, camera, file selection, reports, and Firebase history.
+5. Select **Create an account**, enter an email address and a password of at least six characters, then submit the form.
+6. The app saves the Firebase profile and opens the home dashboard. Open the verification link sent by email when available; verification is not an OTP step.
+7. Open **AI Guide** and send a question to confirm Gemini is enabled.
+8. Test location, camera, file selection, reports, scans, and Firebase history. Approve device permissions when requested.
 
 On the first use of camera or location, accept the permissions requested by the operating system. A physical phone is recommended for testing camera, GPS, phone calls, and external maps because an emulator may not provide realistic sensor behavior.
 
