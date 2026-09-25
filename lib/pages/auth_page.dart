@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import '../firebase_options.dart';
 import '../services/auth_service.dart';
 
 class AuthPage extends StatefulWidget {
@@ -31,7 +31,7 @@ class _AuthPageState extends State<AuthPage> {
     final password = passwordController.text;
     if (email.isEmpty || !email.contains('@')) {
       setState(() {
-        errorMessage = 'Enter a valid Gmail address.';
+        errorMessage = 'Enter a valid email address.';
         successMessage = null;
       });
       return;
@@ -43,9 +43,9 @@ class _AuthPageState extends State<AuthPage> {
       });
       return;
     }
-    if (DefaultFirebaseOptions.currentPlatform.apiKey == 'demo-api-key') {
+    if (Firebase.apps.isEmpty) {
       setState(() {
-        errorMessage = 'Firebase is using placeholder credentials. Configure a Firebase project first.';
+        errorMessage = 'Firebase is unavailable. Check the app configuration and try again.';
         successMessage = null;
       });
       return;
@@ -64,13 +64,8 @@ class _AuthPageState extends State<AuthPage> {
       if (user == null) throw StateError('Firebase did not return a user.');
 
       if (createAccount) {
-        await user.sendEmailVerification();
         await AuthService.instance.saveProfile(user: user, email: email);
-        if (mounted) {
-          setState(() {
-            successMessage = 'Verification email sent to $email. Please check your inbox!';
-          });
-        }
+        await user.sendEmailVerification();
       } else {
         await AuthService.instance.updateLastLogin(user.uid);
       }
@@ -96,7 +91,15 @@ class _AuthPageState extends State<AuthPage> {
     final email = emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
       setState(() {
-        errorMessage = 'Enter your Gmail address above to reset password.';
+        errorMessage = 'Enter your email address above to reset your password.';
+        successMessage = null;
+      });
+      return;
+    }
+
+    if (Firebase.apps.isEmpty) {
+      setState(() {
+        errorMessage = 'Firebase is unavailable. Check the app configuration and try again.';
         successMessage = null;
       });
       return;
@@ -136,16 +139,22 @@ class _AuthPageState extends State<AuthPage> {
   String _authError(String code) {
     switch (code) {
       case 'email-already-in-use':
-        return 'That Gmail already has an account. Choose Log in.';
+        return 'That email already has an account. Choose Log in.';
       case 'invalid-credential':
       case 'wrong-password':
-        return 'Gmail or password is incorrect.';
+        return 'Email or password is incorrect.';
       case 'user-not-found':
         return 'No account found. Choose Create an account first.';
       case 'weak-password':
         return 'Choose a stronger password with at least 6 characters.';
       case 'invalid-email':
-        return 'Enter a valid Gmail address.';
+        return 'Enter a valid email address.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection and try again.';
+      case 'too-many-requests':
+        return 'Too many attempts. Wait a moment and try again.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is not enabled in Firebase.';
       default:
         return 'Could not authenticate with Firebase ($code).';
     }
@@ -180,7 +189,7 @@ class _AuthPageState extends State<AuthPage> {
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
-                    decoration: _decoration('Gmail address', Icons.email_outlined),
+                    decoration: _decoration('Email address', Icons.email_outlined),
                   ),
                   const SizedBox(height: 14),
                   TextField(

@@ -15,6 +15,8 @@ void main() {
 
     expect(find.text('CivicHaven'), findsOneWidget);
     expect(find.text('Sign in to your account'), findsOneWidget);
-    expect(find.text('Send OTP code'), findsOneWidget);
+    expect(find.text('Email address'), findsOneWidget);
+    expect(find.text('Log in'), findsOneWidget);
+    expect(find.text('Forgot Password?'), findsOneWidget);
   });
 }

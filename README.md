@@ -6,7 +6,7 @@ This repository contains the Flutter app in `civic_haven/`. Firebase is required
 
 ## Main features
 
-- Email and password account creation and sign-in using a Gmail address.
+- Email and password account creation and sign-in.
 - Email verification for newly created accounts.
 - Home dashboard with safety resources and emergency links.
 - Safe Route page using the device's current location and an external maps app.
@@ -94,7 +94,7 @@ The checked-in Firebase configuration may contain placeholder or project-specifi
 3. Open the **Sign-in providers** tab.
 4. Enable **Email/Password** and save.
 
-The app currently implements email/password authentication. The UI asks for a Gmail address, but this is not Google OAuth sign-in; no Google Sign-In provider is implemented.
+The app currently implements Firebase email/password authentication. This is not Google OAuth sign-in; no Google Sign-In provider is implemented.
 
 ### 3. Create Firestore
 
@@ -174,7 +174,7 @@ flutter pub get
 flutter run
 ```
 
-4. Create an account with a Gmail address and a password of at least six characters.
+4. Create an account with an email address and a password of at least six characters.
 5. Open the verification email and verify the account.
 6. Sign in again and test location, camera, file selection, reports, and Firebase history.
 
