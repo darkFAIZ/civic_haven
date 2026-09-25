@@ -4,6 +4,8 @@ CivicHaven is a Flutter mobile app for personal and community safety. It lets a 
 
 This repository contains the Flutter app in `civic_haven/`. Firebase is required for account creation, sign-in, user profiles, history, and uploaded evidence.
 
+The AI Guide uses Firebase AI Logic with Gemini. No Gemini API key is stored in the Flutter app.
+
 ## Main features
 
 - Email and password account creation and sign-in.
@@ -25,6 +27,7 @@ This repository contains the Flutter app in `civic_haven/`. Firebase is required
 | **Material 3** | Navigation, forms, buttons, icons, theme, and responsive Flutter widgets. |
 | **Firebase Core** | Initializes Firebase when the app starts. |
 | **Firebase Authentication** | Creates accounts, signs users in, sends verification emails, and tracks auth state. |
+| **Firebase AI Logic** | Sends safety questions to Gemini from the authenticated AI Guide. |
 | **Cloud Firestore** | Stores user profiles and each user's saved history and report details. |
 | **Firebase Storage** | Stores report and scan evidence uploaded from the camera or files. |
 | **FlutterFire CLI** | Connects the Flutter project to a Firebase project and generates `lib/firebase_options.dart`. |
@@ -96,7 +99,15 @@ The checked-in Firebase configuration may contain placeholder or project-specifi
 
 The app currently implements Firebase email/password authentication. This is not Google OAuth sign-in; no Google Sign-In provider is implemented.
 
-### 3. Create Firestore
+### 3. Enable Gemini for the AI Guide
+
+1. In Firebase Console, open **AI Services > AI Logic**.
+2. Enable the Gemini Developer API for the project and accept the requested terms.
+3. Keep the app signed in with Firebase Authentication before opening **AI Guide**.
+
+The Android app uses Firebase AI Logic's Gemini Developer API backend. For a public release, configure Firebase App Check in the Firebase Console and initialize it before using the AI Guide.
+
+### 4. Create Firestore
 
 1. Open **Build > Firestore Database**.
 2. Select **Create database**.
@@ -112,7 +123,7 @@ users/{userId}/history/{historyId}
 
 Before production, replace test-mode rules with rules that require authentication and limit each user to their own documents.
 
-### 4. Create Storage
+### 5. Create Storage
 
 1. Open **Build > Storage**.
 2. Select **Get started** and choose the same region where appropriate.
@@ -127,7 +138,7 @@ users/{userId}/scan-evidence/{timestamp}_{fileName}
 
 Storage rules should require an authenticated user and restrict access to that user's `users/{userId}/` folder before production use.
 
-### 5. Connect Flutter to Firebase
+### 6. Connect Flutter to Firebase
 
 From the `civic_haven` project folder, install and run FlutterFire CLI:
 
@@ -146,7 +157,7 @@ When prompted:
 
 Run this command again whenever you add a new Firebase platform or switch projects. Do not manually invent Firebase API keys or edit the generated options file by hand.
 
-### 6. Check Android fingerprints when needed
+### 7. Check Android fingerprints when needed
 
 The current app does not use Google OAuth, but fingerprints are required if Google Sign-In or another Google API is added later. Generate the debug fingerprints with:
 
