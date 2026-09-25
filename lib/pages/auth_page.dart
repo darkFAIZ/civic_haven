@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../services/auth_service.dart';
 
@@ -45,7 +46,7 @@ class _AuthPageState extends State<AuthPage> {
     }
     if (Firebase.apps.isEmpty) {
       setState(() {
-        errorMessage = 'Firebase is unavailable. Check the app configuration and try again.';
+        errorMessage = _firebaseUnavailableMessage;
         successMessage = null;
       });
       return;
@@ -99,7 +100,7 @@ class _AuthPageState extends State<AuthPage> {
 
     if (Firebase.apps.isEmpty) {
       setState(() {
-        errorMessage = 'Firebase is unavailable. Check the app configuration and try again.';
+        errorMessage = _firebaseUnavailableMessage;
         successMessage = null;
       });
       return;
@@ -158,6 +159,16 @@ class _AuthPageState extends State<AuthPage> {
       default:
         return 'Could not authenticate with Firebase ($code).';
     }
+  }
+
+  String get _firebaseUnavailableMessage {
+    if (kIsWeb) {
+      return 'Firebase is configured for Android only. Run this app on an Android device or add a web app with FlutterFire.';
+    }
+    if (defaultTargetPlatform == TargetPlatform.windows) {
+      return 'Firebase is configured for Android only. Run this app on an Android device or emulator.';
+    }
+    return 'Firebase could not start. Check the Firebase configuration and try again.';
   }
 
   @override

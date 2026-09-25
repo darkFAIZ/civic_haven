@@ -11,9 +11,8 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (_) {
-    // Firebase config is not available yet in local development. The app still
-    // runs using the local UI while Firebase setup is added.
+  } catch (error) {
+    debugPrint('Firebase initialization failed: $error');
   }
 
   runApp(const CivicHavenApp());
