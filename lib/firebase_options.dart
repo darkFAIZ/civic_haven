@@ -17,19 +17,13 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -58,5 +52,24 @@ class DefaultFirebaseOptions {
     messagingSenderId: '740737504177',
     projectId: 'civichaven-9fb00',
     storageBucket: 'civichaven-9fb00.firebasestorage.app',
+  );
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCmxNJ7sxftz5ei2TwakyEv6wVxP7EUIb8',
+    appId: '1:740737504177:web:b3efd5adcc0dd72187a390',
+    messagingSenderId: '740737504177',
+    projectId: 'civichaven-9fb00',
+    authDomain: 'civichaven-9fb00.firebaseapp.com',
+    storageBucket: 'civichaven-9fb00.firebasestorage.app',
+    measurementId: 'G-X5VGHG39V7',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAscUHACLOBsWVXVwtyXo05KTZbptLsy50',
+    appId: '1:740737504177:ios:bc71edb6be83633487a390',
+    messagingSenderId: '740737504177',
+    projectId: 'civichaven-9fb00',
+    storageBucket: 'civichaven-9fb00.firebasestorage.app',
+    iosClientId: '740737504177-6nundkg1sivgsqgv2873g3gfbqr820q9.apps.googleusercontent.com',
+    iosBundleId: 'com.example.civicHaven',
   );
 }

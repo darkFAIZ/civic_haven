@@ -12,7 +12,12 @@
           "package_name": "com.example.civic_haven"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "740737504177-vfso40tnr2pvvb674a9lm0nkl5rsledn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBpoeBE0qzcqfR-iTgBP20NBwfxX7XA0rg"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "740737504177-vfso40tnr2pvvb674a9lm0nkl5rsledn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "740737504177-6nundkg1sivgsqgv2873g3gfbqr820q9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.civicHaven"
+              }
+            }
+          ]
         }
       }
     }
